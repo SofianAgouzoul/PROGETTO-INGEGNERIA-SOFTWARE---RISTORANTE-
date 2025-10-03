@@ -1,0 +1,5 @@
+Vino Bianco 5.0
+Acqua Frizzante 1.5
+Acqua Naturale 1.5
+Birra 3.0
+Coca-Cola 2.5
