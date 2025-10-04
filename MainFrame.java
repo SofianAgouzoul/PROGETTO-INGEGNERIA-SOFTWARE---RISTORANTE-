@@ -8,46 +8,65 @@ import java.io.File;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 
-/* Pannello personalizzato con immagine ridimensionata */
-class ImagePanel extends JPanel {
-    private BufferedImage image;
 
+class ImagePanel extends JPanel {
+    private Color bgColor;
+
+    // Costruttore che accetta BufferedImage (come l'originale) ma usa un colore di default
     public ImagePanel(BufferedImage image) {
-        this.image = image;
+        // Ignoro l'immagine, imposto un colore di sfondo predefinito o trasparente
+        // Useremo il colore impostato esternamente tramite setBackground()
+    }
+
+    // Aggiungo un costruttore che accetta direttamente il colore per un uso più pulito
+    public ImagePanel(Color bgColor) {
+        this.bgColor = bgColor;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (image != null) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                                RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-            g2.dispose();
+        // Disegna lo sfondo con il colore definito
+        if (bgColor != null) {
+            g.setColor(bgColor);
+            g.fillRect(0, 0, getWidth(), getHeight());
         }
+        // Se volessimo usare il colore del container, useremmo: g.setColor(getBackground());
     }
 }
 
+// ====================================================================
+// CLASSE PRINCIPALE MainFrame
+// ====================================================================
 public class MainFrame extends JFrame {
     private JButton btnSala, btnCliente, btnPizzayolo, btnCassiere, btnChef; 
     private JPanel panel, panelSala, panelPizzayolo, panelChef, panelCassiere, panelClienti;
+    // Queste liste sono commentate per la compilazione, se le classi non esistono:
     private ArrayList<Admin> admList = new ArrayList<>();
     private ArrayList<Cuoco> cuochiList = new ArrayList<>();
 
+    // Definisco i colori da usare
+    private static final Color CLIENTE_COLOR = new Color(240, 248, 255); 
+    private static final Color SALA_COLOR = new Color(255, 239, 213);   
+    private static final Color CASSA_COLOR = new Color(224, 255, 255);  
+    private static final Color CHEF_COLOR = new Color(245, 245, 220);   
+    private static final Color PIZZAIOLO_COLOR = new Color(250, 235, 215); 
+
+
     public MainFrame() {
-        // Carico immagini per i vari pannelli
-        BufferedImage imgCliente   = loadImage("immagini/white.jpg");
-        BufferedImage imgSala      = loadImage("immagini/white.jpg");
-        BufferedImage imgCassa     = loadImage("immagini/white.jpg");
-        BufferedImage imgChef      = loadImage("immagini/white.jpg");
-        BufferedImage imgPizzaiolo = loadImage("immagini/white.jpg");
+        // Carico immagini per i vari pannelli (originale: white.jpg, b-pizza.png)
+        // Queste immagini vengono caricate MA NON USATE come sfondo grazie a ImagePanel modificato.
+        BufferedImage imgCliente = loadImage("immagini/white.jpg");
+        BufferedImage imgSala = loadImage("immagini/white.jpg");
+        BufferedImage imgCassa = loadImage("immagini/white.jpg");
+        BufferedImage imgChef = loadImage("immagini/white.jpg");
+        BufferedImage imgPizzaiolo = loadImage("immagini/b-pizza.png");
 
         // Carico le icone per i bottoni
-        BufferedImage iconCliente   = loadImage("immagini/User.png");
-        BufferedImage iconSala      = loadImage("immagini/dining-table.png");
-        BufferedImage iconCassa     = loadImage("immagini/cash-register.png");
-        BufferedImage iconChef      = loadImage("immagini/chef.png");
+        BufferedImage iconCliente = loadImage("immagini/User.png");
+        BufferedImage iconSala = loadImage("immagini/dining-table.png");
+        BufferedImage iconCassa = loadImage("immagini/cash-register.png");
+        BufferedImage iconChef = loadImage("immagini/chef.png");
         BufferedImage iconPizzaiolo = loadImage("immagini/pizza.png");
 
         // Layout principale: 5 righe in verticale
@@ -56,12 +75,30 @@ public class MainFrame extends JFrame {
         Border raisedetched = BorderFactory.createEtchedBorder(EtchedBorder.RAISED);
         Border loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 
-        // ---- Pannelli con immagini + bottoni con icona ----
-        panelClienti = createImageButtonPanel(imgCliente, "Cliente", iconCliente);
-        panelSala    = createImageButtonPanel(imgSala, "Sala", iconSala);
-        panelCassiere= createImageButtonPanel(imgCassa, "Cassa", iconCassa);
-        panelChef    = createImageButtonPanel(imgChef, "Chef", iconChef);
-        panelPizzayolo = createImageButtonPanel(imgPizzaiolo, "Pizzaiolo", iconPizzaiolo);
+        // ---- Pannelli con immagine (per compatibilità) + bottoni ----
+        JButton[] ref = new JButton[1];
+
+        panelClienti = createImageButtonPanel(imgCliente, CLIENTE_COLOR, "Cliente", iconCliente, ref);
+        btnCliente = ref[0];
+
+        panelSala = createImageButtonPanel(imgSala, SALA_COLOR, "Sala", iconSala, ref);
+        btnSala = ref[0];
+
+        panelCassiere = createImageButtonPanel(imgCassa, CASSA_COLOR, "Cassa", iconCassa, ref);
+        btnCassiere = ref[0];
+
+        panelChef = createImageButtonPanel(imgChef, CHEF_COLOR, "Chef", iconChef, ref);
+        btnChef = ref[0];
+
+        panelPizzayolo = createImageButtonPanel(imgPizzaiolo, PIZZAIOLO_COLOR, "Pizzaiolo", iconPizzaiolo, ref);
+        btnPizzayolo = ref[0];
+
+        // Imposto colori di sfondo per i bottoni
+        btnCliente.setBackground(new Color(200, 220, 240));
+        btnSala.setBackground(new Color(200, 240, 200));
+        btnCassiere.setBackground(new Color(240, 200, 200));
+        btnChef.setBackground(new Color(240, 240, 200));
+        btnPizzayolo.setBackground(new Color(200, 200, 240));
 
         // Bordi
         panelClienti.setBorder(BorderFactory.createCompoundBorder(raisedetched, loweredetched));
@@ -77,16 +114,10 @@ public class MainFrame extends JFrame {
         panel.add(panelChef);
         panel.add(panelPizzayolo);
 
-        // ---- Recupero i bottoni ----
-        btnCliente   = (JButton) panelClienti.getComponent(0);
-        btnSala      = (JButton) panelSala.getComponent(0);
-        btnCassiere  = (JButton) panelCassiere.getComponent(0);
-        btnChef      = (JButton) panelChef.getComponent(0);
-        btnPizzayolo = (JButton) panelPizzayolo.getComponent(0);
-
-        // ---- Azioni bottoni ----
+       
+        // ----Azioni dei bottoni 
         btnSala.addActionListener(e -> admList.add(new Sala()));
-        btnCliente.addActionListener(e -> new ClienteFrame(admList, cuochiList));
+        btnCliente.addActionListener(_ -> new ClienteFrame(admList, cuochiList));
         btnCassiere.addActionListener(e -> admList.add(new Cassiere()));
         btnPizzayolo.addActionListener(e -> cuochiList.add(new Pizzayolo()));
         btnChef.addActionListener(e -> cuochiList.add(new Chef()));
@@ -101,25 +132,34 @@ public class MainFrame extends JFrame {
         setVisible(true);
     }
 
-    // Funzione per creare pannello con immagine + bottone con icona
-    private JPanel createImageButtonPanel(BufferedImage bgImg, String text, BufferedImage iconImg) {
-        ImagePanel p = new ImagePanel(bgImg);
-        p.setLayout(new OverlayLayout(p));
+    // Funzione modificata per creare pannello con sfondo colorato
+    private JPanel createImageButtonPanel(BufferedImage bgImg, Color bgColor, String text, BufferedImage iconImg, JButton[] outBtn) {
+        // Uso ImagePanel passandogli il colore, ignorando bgImg (per coerenza strutturale)
+        ImagePanel p = new ImagePanel(bgColor); 
+        p.setLayout(new BorderLayout());
 
-        JButton btn = new JButton(text);
-        
-        // Se c'è un'icona, la impostiamo e la scaldiamo
+        // Etichetta con icona a sinistra
+        JLabel lblIcon = new JLabel();
         if (iconImg != null) {
-            Image scaledIcon = iconImg.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
-            btn.setIcon(new ImageIcon(scaledIcon));
-            btn.setHorizontalAlignment(SwingConstants.LEFT); // testo a destra dell'icona
+            Image scaledIcon = iconImg.getScaledInstance(48, 48, Image.SCALE_SMOOTH);
+            lblIcon.setIcon(new ImageIcon(scaledIcon));
         }
+        lblIcon.setHorizontalAlignment(SwingConstants.CENTER);
+        lblIcon.setPreferredSize(new Dimension(80, 80));
 
-        btn.setAlignmentX(0.5f); 
-        btn.setAlignmentY(0.5f);
-        btn.setMaximumSize(new Dimension(150, 40)); // allargato se serve spazio icona
+        // Bottone con solo testo a destra
+        JButton btn = new JButton(text);
+        btn.setPreferredSize(new Dimension(150, 40));
+        btn.setFocusPainted(false);
+        btn.setForeground(Color.BLACK); 
 
-        p.add(btn);
+        // Ritorno il bottone tramite array
+        outBtn[0] = btn;
+
+        // Aggiungo al pannello
+        p.add(lblIcon, BorderLayout.WEST);
+        p.add(btn, BorderLayout.EAST);
+
         return p;
     }
 
