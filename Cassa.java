@@ -1,4 +1,4 @@
 
 public interface Cassa {
-	public void aggiungiComanda(Tavolo tavolo);
+ 	void aggiungiComanda(Tavolo tavolo);
 }

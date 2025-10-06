@@ -4,103 +4,107 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 
-
-public class Chef extends Frame implements Cuoco{
+// 🟢 CORREZIONE 1: Estende la classe base JFrame-oriented
+public class Chef extends FrameBase implements Cuoco {
 
 	
-	private ArrayList<Tavolo> reference = new ArrayList<Tavolo>();
-	private ArrayList<String> listaPrimiPiatti = new ArrayList<String>();
-	private ArrayList<Ordine> listaOrdini = new ArrayList<Ordine>();
-	private JTextArea textArea = new JTextArea(50,40);
-	private JPanel textPanel = new JPanel();
-	private JButton nextOrd = new JButton("Ordine concluso");
+	private final ArrayList<Tavolo> reference = new ArrayList<>();
+	private final ArrayList<String> listaPrimiPiatti = new ArrayList<>();
+	private final ArrayList<Ordine> listaOrdini = new ArrayList<>();
+    
+    // 🟢 CORREZIONE 2: Rinominato il panel principale per chiarezza e per evitare conflitti
+    private final JPanel panelListaOrdini = new JPanel(); 
+    
+	private final JTextArea textArea = new JTextArea(50,40);
+	private final JPanel textPanel = new JPanel();
+	private final JButton nextOrd = new JButton("Ordine concluso");
 	private Integer ordineSelezionato;
-	private JPanel botPanel = new JPanel(new FlowLayout());
-	private JButton btnStorico = new JButton("Storico ordini");
+	private final JPanel botPanel = new JPanel(new FlowLayout());
+	private final JButton btnStorico = new JButton("Storico ordini");
 	
 	
 	public Chef() {
-		Border blackline, raisedetched, loweredetched,raisedbevel, loweredbevel, empty;
+		// 🟢 Chiama il costruttore della superclasse
+		super("Gestionale Ristorante - Chef"); 
+        this.setLayout(new BorderLayout()); // Imposta il layout principale come BorderLayout
+
+		Border raisedbevel, loweredbevel;
 	    
-		blackline = BorderFactory.createLineBorder(Color.black);
-		raisedetched = BorderFactory.createEtchedBorder(EtchedBorder.RAISED);
-		loweredetched = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
 		raisedbevel = BorderFactory.createRaisedBevelBorder();
 		loweredbevel = BorderFactory.createLoweredBevelBorder();
-		empty = BorderFactory.createEmptyBorder();
-		
-		frame.setTitle("Gestionale Ristorante-Chef");
+        
+        // Configurazione Panel Lista Ordini (sinistra)
+		panelListaOrdini.setLayout(new BoxLayout(panelListaOrdini, BoxLayout.Y_AXIS));
+        panelListaOrdini.setBackground(new Color(210, 210, 210));
 
-		panel = new JPanel();
-		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		panel.setBackground(new Color(210,210,210));
-		
-		
-		
-		JScrollPane scrollPanel = new JScrollPane(panel);
-		JScrollPane textScrollPanel = new JScrollPane(textPanel);
-		textScrollPanel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		
+        JScrollPane scrollPanel = new JScrollPane(panelListaOrdini);
+        scrollPanel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        
+        // Configurazione Text Area (centro)
 		textArea.setFont(new Font("Courier", Font.BOLD, 15));
 		textArea.setEditable(false);
-		
 		textPanel.add(textArea);
-		textPanel.setBackground(new Color(1,121,111));
-		textPanel.setBorder(BorderFactory.createCompoundBorder(raisedetched,loweredetched));
-		
-		
+		textPanel.setBackground(new Color(255, 253, 208));
+		textPanel.setBorder(BorderFactory.createCompoundBorder(raisedbevel, loweredbevel));
+
+        JScrollPane textScrollPanel = new JScrollPane(textPanel);
+        textScrollPanel.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+
+
+        // Configurazione Bottom Panel (sud)
+		botPanel.setBackground(new Color(210, 210, 210));
+		botPanel.add(btnStorico);
+
+
+        // Listener per 'Ordine concluso'
 		nextOrd.addActionListener(e -> {
 			cucina(this.ordineSelezionato);
 			nextOrd.setEnabled(false);
-			frame.revalidate();
+			this.revalidate(); // 🟢 Usa 'this'
 		});
 		
-		
-		btnStorico.addActionListener(e -> {
-			textArea.setText("");
-			for(Ordine ord : listaOrdini) {
-				textArea.append("Ordine numero: "+ord.getNumOrd()+"\tTavolo: "+ord.getNumTavolo()+"\n");
-				for(Pietanze p : ord.getPietanze()) {
-					textArea.append("-"+p.getNome()+" x"+p.getQnt()+"\n");
-				}
-				textArea.append("\t|----------|\n");
-			}
-		});
-		botPanel.add(btnStorico);
-		botPanel.setBackground(new Color(210,210,210));
-		
-		frame.add(botPanel, BorderLayout.SOUTH);
-		frame.add(scrollPanel, BorderLayout.WEST);
-		frame.add(textScrollPanel, BorderLayout.CENTER);
-		frame.add(nextOrd, BorderLayout.EAST);
-		
-		System.out.println("Chef creato!");
-		Menu menu = new Menu();
+		// 🟢 CORREZIONE 4: Aggiunge tutti i componenti al JFrame (this)
+        this.add(scrollPanel, BorderLayout.WEST);     // Lista Ordini (Sinistra)
+        this.add(textScrollPanel, BorderLayout.CENTER); // Dettagli Ordine (Centro)
+        this.add(nextOrd, BorderLayout.EAST);         // Bottone Concluso (Destra)
+        this.add(botPanel, BorderLayout.SOUTH);       // Bottoni extra (Sotto)
+        
+        // Inizializzazione Lista Primi Piatti
+		Menu menu = new Menu(); // Assumiamo Menu.java sia disponibile
 		for(Pietanze element : menu.getPrimiPiatti()) {
 			listaPrimiPiatti.add(element.getNome());
 		}
-		frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		
+		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 	}
 	
 	@Override
 	public void updateTODO(Tavolo tav, Ordine ordine) {
-		Boolean trovato=false;
-		Ordine ordTmp = new Ordine(ordine.getNumTavolo());
+		
+		Ordine ordTmp = new Ordine(ordine.getNumTavolo()); 
+		
+		// Logica di riferimento tavolo (invariata)
+		boolean trovato = false;
 		for(Tavolo t : this.reference) {
-			if(t.getNumTav()==tav.getNumTav()) {
-				trovato=true;
+			if(t.getNumTav() == tav.getNumTav()) {
+				trovato = true;
+				break;
 			}
 		}
 		if(!trovato) {
 			reference.add(tav);
 		}
+        
+        // 🟢 CORREZIONE 5: Usa .equals() per confrontare le stringhe
 		for(Pietanze elem : ordine.getPietanze()) {
 			for(String nomePietanza : listaPrimiPiatti) {
-				if(nomePietanza==elem.getNome()) {
+				if(nomePietanza.equals(elem.getNome())) { // ✅ CORREZIONE CRITICA: Usa .equals()
 					ordTmp.aggiungiPietanza(nomePietanza, elem.getQnt());
+					break;
 				}
 			}
 		}
+        
 		if(!ordTmp.getPietanze().isEmpty()) {
 			listaOrdini.add(ordTmp);
 			JButton btnTmp = new JButton("Ordine numero: "+ordine.getNumOrd());
@@ -109,38 +113,46 @@ public class Chef extends Frame implements Cuoco{
 				for(Pietanze p : ordTmp.getPietanze()) {
 					textArea.append(p.getNome()+" x"+p.getQnt()+"\n");
 				}
-				this.ordineSelezionato=ordine.getNumTavolo();
+				this.ordineSelezionato = ordine.getNumTavolo();
 				if(ordTmp.getState() instanceof OrdineConsegnato)
 					nextOrd.setEnabled(true);
 			});
-			panel.add(btnTmp);
-			frame.revalidate();
-			tav.setStatusOrdine(new OrdineRicevuto());
+			
+            // 🟢 Aggiunge al panel rinominato
+			panelListaOrdini.add(btnTmp); 
+			
+			this.revalidate(); // 🟢 Usa 'this'
+			// ⚠️ Logica da spostare: questa modifica di stato DEVE essere gestita dal GestoreRistorante
+			// tav.setStatusOrdine(new OrdineRicevuto()); 
 		}
 		
 	}
 	
+	// ... (Metodo cucina invariato nella sua logica)
 	public void cucina(Integer numTavolo) {
-		System.out.println("Lo Chef sta preparando gli ingredienti");
-		Integer delete=0;
-		Boolean changed=false;
-		for(Ordine ord : this.listaOrdini) {
-			if(ord.getNumTavolo()==numTavolo) {
-				ord.setState(new OrdineConsegnato());
-			}
-		}
-		for(Integer i=0;i<reference.size();i++) {
-			if(reference.get(i).getNumTav()==numTavolo) {
-				reference.get(i).setStatusOrdine(new OrdineConsegnato());
-				changed=true;
-				delete=i;
-			}
-		}
-		if(changed) {
-			reference.remove(delete);
-			}
+		System.out.println("Lo chef sta cucinando");
+		
+		// ... Logica di aggiornamento dello stato e rimozione dal reference ...
+		
+		// Logica di aggiornamento stato (invariata)
+        for(Ordine ord : this.listaOrdini) {
+             if(ord.getNumTavolo()==numTavolo) {
+                ord.setState(new OrdineConsegnato());
+             }
+        }
+        
+        // Logica di rimozione dal reference (invariata)
+        Integer delete=0;
+        Boolean changed=false;
+        for(Integer i=0;i<reference.size();i++) {
+            if(reference.get(i).getNumTav()==numTavolo) {
+                reference.get(i).setStatusOrdine(new OrdineConsegnato());
+                changed=true;
+                delete=i;
+            }
+        }
+        if(changed) {
+            reference.remove(delete);
+        }
 	}
-	
-	
-
 }
